@@ -13,7 +13,7 @@ The configurable fields are:
  * Name Format - the regular expression describing the required regular group name format. See the [PHP Manual](https://www.php.net/manual/en/reference.pcre.pattern.syntax.php) for Regular Expression syntax. 
  * Error Message - the error message that should be displayed if a group name does not meet the requirments.
 
-Only one group validator may be active at a time. The "add" button above the index page will not be active when there is already an active Group Name Validator. 
+Only one group validator may be active at a time. A dialog will be displayed upon Save if the current Validator being added/edited has Active status and there is already a Validator with Active status for the current CO in the database. The user can then choose whether to change the other Validator to Suspended or Cancel the Save operation. 
 
 The Group Name Validator only checks regular group names at Save time. It does not change regular group names that have already been created. However,the currently active validator will display an error if an already created regular group is edited and, upon save, the name does not match the required name format. 
 
