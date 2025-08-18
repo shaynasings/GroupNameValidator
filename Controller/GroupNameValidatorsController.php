@@ -50,7 +50,7 @@ class GroupNameValidatorsController extends StandardController {
     return $p[$this->action];
   }
 
-  function index() {
+  function add() {
 
     //See it there are any active GroupNameValidators for the current CO
 
@@ -63,14 +63,42 @@ class GroupNameValidatorsController extends StandardController {
 
     $activeValidators = $this->GroupNameValidator->find('first', $args);
 
-    //If there is an active validator, set the view variable so we can disable the add button in the View
+    //If there is an active validator, set the view variable 
     if (!empty($activeValidators)) {
-        $this->set('vv_active_validator', true);
+       $this->set('vv_active_validator', true);
     } else {
-        $this->set('vv_active_validator', false);
+       $this->set('vv_active_validator', false);
     }
 
-    //call the parent index function
-    parent::index();
+    //call the parent add function
+    parent::add();
   }
+
+  function edit($id = null) {
+
+    //See it there are any other active GroupNameValidators for the current CO
+
+    $coId = $this->cur_co['Co']['id'];
+
+    $args = array();
+    $args['conditions']['co_id'] = $coId;
+    $args['conditions']['GroupNameValidator.status'] = SuspendableStatusEnum::Active;
+    $args['conditions']['GroupNameValidator.id !='] = $id;
+    $args['contain'] = false;
+
+    $activeValidators = $this->GroupNameValidator->find('first', $args);
+
+    //If there is an active validator, set the view variable
+    if (!empty($activeValidators)) {
+       $this->set('vv_active_validator', true);
+    } else {
+       $this->set('vv_active_validator', false);
+    }
+
+    //call the parent edit function
+    parent::edit($id);
+  }
+
 }
+
+

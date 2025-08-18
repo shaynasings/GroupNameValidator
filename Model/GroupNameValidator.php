@@ -15,6 +15,8 @@ class GroupNameValidator extends AppModel {
 
   public $cmPluginType = "other";
 
+  public $displayField = "description";
+
   // Validation rules for table elements
   public $validate = array(
     'co_id' => array(
@@ -28,16 +30,10 @@ class GroupNameValidator extends AppModel {
       'allowEmpty' => true
     ),
     'status' => array(
-      'content' => array(
-        'rule' => array('inList', array(SuspendableStatusEnum::Active,
+      'rule' => array('inList', array(SuspendableStatusEnum::Active,
                                         SuspendableStatusEnum::Suspended)),
-        'required' => true,
-        'allowEmpty' => false
-      ),
-      'oneActive' => array(
-        'rule' => array('avoidMultipleActives', 'co_id', 'id'),
-        'message' => ""
-      )
+      'required' => true,
+      'allowEmpty' => false
     ),
     'name_format' => array(
       'rule' => '/.*/',
@@ -51,7 +47,6 @@ class GroupNameValidator extends AppModel {
     )
   );
         
-
 
   public function cmPluginMenus() {
     return array(
@@ -68,55 +63,38 @@ class GroupNameValidator extends AppModel {
    *
    */
 
-/*  public function beforeSave($options = array()) { 
+  public function beforeSave($options = array()) { 
 
-    if ($this->data['GroupNameValidator']['status'] == SuspendableStatusEnum::Active) {
+    //keep parent logic
+    if (!parent::beforeSave($options)) {
+      return false;
+    }
+
+
+    if (!empty($this->data['GroupNameValidator']['status']) && 
+         $this->data['GroupNameValidator']['status'] === SuspendableStatusEnum::Active) {
 
       $coId = $this->data['GroupNameValidator']['co_id'];
 
-      $args = array();
-      $args['conditions']['co_id'] = $coId;
-      $args['conditions']['GroupNameValidator.status'] = SuspendableStatusEnum::Active;
-      $args['contain'] = false;
-
-      $activeValidators = $this->find('all', $args);
-    
-      foreach($activeValidators as $validator) {
-        if($validator['GroupNameValidator']['id'] != $this->data['GroupNameValidator']['id']) {
-          $messages = (array)CakeSession::read('Message.' . $options['key']);
-          $newMessage = array(
-            'message' => _txt('er.gnv.deny_multiple_active', array($validator['GroupNameValidator']['description'])),
-            'key' => 'error',
-            'element' => 'default',
-            'params' => array()
-          );
-          $messages[] = $newMessage;
-          CakeSession::write('Message.' . 'error', $messages);
-          
-          return false;
-        }
-      }
-    }
-    return true;
-  } */
-
-
-  public function avoidMultipleActives($check, $coId, $id) { 
-
-    if ($check['status'] == SuspendableStatusEnum::Active) {
+      // exclude the current id if we are editing
+      $excludeId = !empty($this->data['GroupNameValidator']['id'])
+        ? $this->data['GroupNameValidator']['id']
+        : null;
 
       $args = array();
-      $args['conditions']['co_id'] = $this->data['GroupNameValidator'][$coId];
-      $args['conditions']['GroupNameValidator.status'] = SuspendableStatusEnum::Active;
-      $args['contain'] = false;
-
-      $activeValidators = $this->find('all', $args);
-      foreach($activeValidators as $validator) {
-        if($validator['GroupNameValidator']['id'] != $this->data['GroupNameValidator'][$id]) {
-          return _txt('er.gnv.deny_multiple_active', array($validator['GroupNameValidator']['description']));
-        }
+      $conditions['co_id'] = $coId;
+      $conditions['GroupNameValidator.status'] = SuspendableStatusEnum::Active;
+      if ($excludeId) {
+        $conditions['GroupNameValidator.id !='] = $excludeId;
       }
+
+      //Suspend all other Active rows
+      $this->updateAll(
+        array('GroupNameValidator.status' => "'" . SuspendableStatusEnum::Suspended . "'"),
+        $conditions
+      );
     }
     return true;
-  }
-}
+  } 
+
+} 

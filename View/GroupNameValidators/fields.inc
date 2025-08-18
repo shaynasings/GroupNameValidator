@@ -51,8 +51,14 @@
         global $cm_lang, $cm_texts;
         
         $attrs = array();
-        $attrs['value'] = (isset($group_name_validators) ? $group_name_validators[0]['GroupNameValidator']['status'] : SuspendableStatusEnum::Active);
+        $attrs['value'] = (isset($group_name_validators)
+                           ? $group_name_validators[0]['GroupNameValidator']['status'] 
+                           : (($this->action == "add" && $vv_active_validator)
+                             ? SuspendableStatusEnum::Suspended
+                             : SuspendableStatusEnum::Active)
+                          );
         $attrs['empty'] = false;
+        $attrs['id'] = 'statusField';
 
         if($e) {
           print $this->Form->select('status',
@@ -94,10 +100,45 @@
     <li class="fields-submit">
       <div class="field-name"></div>
       <div class="field-info">
-        <?php print $this->Form->submit($submit_label); ?>
+        <?php print $this->Form->submit($submit_label, ['id' => 'saveBtn', 'class' => 'btn btn-primary nospin']); ?>
       </div>
     </li>
   <?php endif; ?>
 </ul>
+
+<div id="activeConfirmDialog" title="Confirm Change" style="display:none;">
+    Another Validator is already Active.<br>
+    Do you want to make this one Active and set the other to Suspended?
+</div>
+
+<?php if ($vv_active_validator): ?>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var saveBtn = document.getElementById('saveBtn');
+    var statusField = document.getElementById('statusField');
+
+    if (saveBtn && statusField) {
+        saveBtn.addEventListener('click', function (event) {
+            if (statusField.value === '<?= SuspendableStatusEnum::Active ?>') {
+                event.preventDefault(); // stop form submission
+                $("#activeConfirmDialog").dialog({
+                    buttons: {
+                        "Yes": function() {
+                             $(this).dialog("close");
+                             saveBtn.closest('form').submit(); // Resume submit
+                        },
+                        "No": function() {
+                             $(this).dialog("close");
+                        }
+                    }
+                });
+            }
+        });
+    } else {
+        console.warn('Save button or status field not found.');
+    }
+});
+</script>
+<?php endif; ?>
 
 

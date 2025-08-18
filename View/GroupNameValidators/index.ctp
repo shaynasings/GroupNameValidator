@@ -14,7 +14,7 @@
   // Add top links
   $params['topLinks'] = array();
 
-  if($permissions['add'] && !$vv_active_validator) {
+  if($permissions['add']) {
     $params['topLinks'][] = $this->Html->link(
       _txt('op.add-a',array(_txt('ct.group_name_validators.1'))),
       array(
